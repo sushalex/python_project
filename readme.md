@@ -76,21 +76,8 @@ You'll get output like:
 ```
 City name: London, Temperature: 15 C / 59 F, Description: light rain, Humidity: 80%, Wind Speed: 3 m/s / 6 mph
 ...
-```
 
 To continue querying, press `y`. To exit, press `n`.
-
----
-
-## Testing
-
-Unit tests are provided using `unittest` and `unittest.mock`.
-
-Run tests with:
-
-
-python -m unittest test_weather_module.py
-
 
 ---
 
