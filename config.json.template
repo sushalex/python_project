@@ -1,0 +1,5 @@
+{
+    "apiKey":"ace1657bfa84bc065a025711e9f9b69d",
+    "url":"https://api.openweathermap.org/data/2.5/weather?q={}&units={}&appid={}",
+    "cacheTimeHour":1
+}
