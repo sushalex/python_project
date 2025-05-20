@@ -23,34 +23,54 @@ It supports both metric and imperial units and includes in-memory caching to avo
 * Python 3.7+
 * Internet connection
 
-Install required package:
+Step 1. Create the .venv (Virtual Environment)
 
-pip install requests
+Make sure python is recognized in your terminal and use 'python -m venv .venv'. 
+if not, use command 'py -m venv .venv'
+Tip (Windows) This creates a folder called .venv in your project directory containing a fresh Python environment
 
+Step 2. Activate the .venv
+
+Windows 
+run in terminal command '.venv\Scripts\activate'
+
+MacOs/Linux
+run in terminal command 'source .venv/bin/activate'
+
+Success activated, your prompt will show something like:
+(.venv) C:\Your Project\Path>
+
+Step 3. Install additional libs
+pip install -r requirements.txt
 
 ---
 
-## 📁 Project Structure
-
+## Project Structure
 
 weather_app/
-	weather_app.py         # Main script
-	config.json            # Configuration file with API key and URL template
-	test_weather_module.py # Unit tests
+	app.py         # Main script
+	config.json    # Configuration file with API key and URL template
+
+	src            # Folder for main files of project. Handling, fetcing data, app settings
+	 - config.py   # Load settings data from config.json file
+	 - weather.py  # It is contains functions for handling  cache, logic, data of the weather app.
+
+	tests		    # Folder for Unit tests
+	 - test_weather.py  # Load settings data from config.json file
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Rename file `config.json.template` to `config.json`:
 
-```json
+ .json
 {
   "apiKey": "your_openweathermap_api_key",
   "cacheTimeHour": 1,
   "url": "http://api.openweathermap.org/data/2.5/weather?q={}&units={}&appid={}"
 }
-```
+
 
 * `apiKey`: Your OpenWeatherMap API key.
 * `cacheTimeHour`: Number of hours to cache results.
@@ -58,17 +78,17 @@ Rename file `config.json.template` to `config.json`:
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Run the script:
 
-python weather_app.py
+python app.py
 
 
 You will be prompted to enter a comma-separated list of cities:
 
 ```
-Please insert city for weather forecast (comma-separated): London, Paris, New York
+Please insert city for weather forecast (comma-separated): Tallinn, Tartu, London, Paris
 ```
 
 You'll get output like:
@@ -78,13 +98,5 @@ City name: London, Temperature: 15 C / 59 F, Description: light rain, Humidity: 
 ...
 
 To continue querying, press `y`. To exit, press `n`.
-
----
-
-##  Future for next api version. Improvements
-
-* Replace `exit()` calls with proper exceptions
-* Use logging instead of `print()`
-* Support for asynchronous requests/response
 
 ---

@@ -1,36 +1,24 @@
+# This file is part of the Weather App project.
+# It is contains functions for handling  cache, logic, data of the weather app.
 import requests
 import json
-import os
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
+from src.config import get_config
 
-# Load API key from config
-config_path = os.path.join(os.getcwd(), "config.json")
-print(" --------- " + config_path)
+requests_cache = {}  # Format: { "city_name_lower": weather_data_dict }
 
-requests_cache = []  # Each item includes "timestamp"
-IS_EXIST = True
-
-try:
-    with open(config_path, "r") as f:
-        config_json = json.load(f)
-        API_KEY_ID = config_json["apiKey"]
-        DURATION_HOURS = config_json["cacheTimeHour"]
-        CACHE_LIFETIME = timedelta(hours=DURATION_HOURS)
-        URL_TEMPLATE = str(config_json["url"])
-except Exception as e:
-    print(f"[ERROR] Read config file. {e}")
-    exit()
-
+weater_config = get_config()
 
 def is_cached_recent(city):
-    now = datetime.utcnow()
-    for entry in requests_cache:
-        if entry["city"].lower() == city.lower():
-            if now - entry["timestamp"] <= CACHE_LIFETIME:
-                return entry
+    now = datetime.now(timezone.utc)
+    key = city.lower()
+    entry = requests_cache.get(key)
+
+    if entry and now - entry["timestamp"] <= weater_config.cache_lifetime:
+        return entry
     return None
 
-
+# Return dict weather data for a city
 def extract_weather_fields(city, metric_json, imperial_json):
     try:
         # Validate required fields in both metric and imperial responses
@@ -55,7 +43,7 @@ def extract_weather_fields(city, metric_json, imperial_json):
         # Ensure no values are missing
         if None in [temp_metric, temp_imperial, description, humidity, wind_speed_metric, wind_speed_imperial]:
             print(f"[ERROR] Missing weather values in response for city '{city}'")
-            exit()
+            return None
 
         return {
             "city": city,
@@ -63,17 +51,18 @@ def extract_weather_fields(city, metric_json, imperial_json):
             "description": description,
             "humidity": f"{humidity}%",
             "windSpeed": f"{wind_speed_metric} m/s / {wind_speed_imperial} mph",
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
     except (TypeError, ValueError) as e:
         print(f"[ERROR] Failed to extract weather fields for city '{city}': {e}")
-        exit()
+        return None
 
 
+# Get data from openweathermap and return dict weather data for a city
 def fetch_weather_data(city):
     try:
-        metric_url = URL_TEMPLATE.format(city, "metric", API_KEY_ID)
-        imperial_url = URL_TEMPLATE.format(city, "imperial", API_KEY_ID)
+        metric_url = weater_config.url_template.format(city, "metric", weater_config.api_key_id)
+        imperial_url = weater_config.url_template.format(city, "imperial", weater_config.api_key_id)
 
         #get data from openweathermap 
         metric_resp = requests.get(metric_url)
@@ -94,7 +83,7 @@ def fetch_weather_data(city):
         exit()
     return None
 
-
+# Return normalized list of cities. Removed whitespaces, set city to lowercase, distinct
 def get_unique_nonempty_cities(city_list: list):
     seen = set()
     unique = []
@@ -111,7 +100,7 @@ def get_unique_nonempty_cities(city_list: list):
             unique.append(city)
     return unique
 
-
+# Return list of weather data for a cities
 def get_weather_for_cities(city_list):
     unique_cities = get_unique_nonempty_cities(city_list)
     response_data = []
@@ -124,28 +113,8 @@ def get_weather_for_cities(city_list):
 
         data = fetch_weather_data(city)
         if data:
-            requests_cache.append(data)
+            key = city.lower()
+            requests_cache[key] = data
             response_data.append(data)
 
     return response_data
-
-# Main loop
-while IS_EXIST:
-    try:
-        input_cities = input("Please insert city for weather forecast (comma-separated): ")
-        city_list = input_cities.split(",")
-        weather_data = get_weather_for_cities(city_list)
-        
-        result = ""
-        for data in weather_data:
-            result += f"\nCity name: {data['city']}, Temperature: {data['temperature']}, Description: {data['description']}, Humidity: {data['humidity']}, Wind Speed: {data['windSpeed']}"
-        
-        print(result)
-        exit_str = input("\nTo continue - press 'y', exit - press 'n': ").strip().lower()
-        if exit_str == "n":
-            IS_EXIST = False
-    except Exception as e:
-        print(f"[ERROR] Unexpected error: {e}")
-        IS_EXIST = False
-
-print("Exit...")
